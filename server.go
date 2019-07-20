@@ -27,7 +27,9 @@ func startServer() {
 }
 
 func handleRequest(conn net.Conn) {
+  defer conn.Close()
   var files []string
+
   err := filepath.Walk(cacheDir, func(path string, info os.FileInfo, err error) error {
     if info.IsDir() {
       return nil
@@ -36,13 +38,18 @@ func handleRequest(conn net.Conn) {
     return nil
   })
   if err != nil {
-    conn.Close()
+    return
   }
+
+  if len(files) == 0 {
+    return
+  }
+
   rand.Seed(time.Now().UnixNano())
   randFile := files[rand.Intn(len(files))]
   dat, err := ioutil.ReadFile(randFile)
   if err != nil {
-    conn.Close()
+    return
   }
   conn.Write(dat)
   conn.Close()
