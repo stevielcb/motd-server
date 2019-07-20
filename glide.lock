@@ -1,0 +1,8 @@
+hash: c5c34b110e196f41c18029a0eca222881dec72aaf9c9864189c950d951dd1401
+updated: 2019-07-19T22:09:52.006414-07:00
+imports:
+- name: github.com/kelseyhightower/envconfig
+  version: 0b417c4ec4a8a82eecc22a1459a504aa55163d61
+- name: github.com/nishanths/go-xkcd
+  version: 9497d909de390b9a8dd0d88975cf0ce7d0b4d688
+testImports: []
