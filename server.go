@@ -2,11 +2,11 @@ package main
 
 import (
   "fmt"
+  "io/ioutil"
+  "math/rand"
   "net"
   "os"
-  "io/ioutil"
   "path/filepath"
-  "math/rand"
   "time"
 )
 

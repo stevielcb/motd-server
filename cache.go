@@ -1,13 +1,13 @@
 package main
 
 import (
+  "bytes"
   b64 "encoding/base64"
-  "os"
+  "fmt"
   "io"
   "net/http"
+  "os"
   "time"
-  "fmt"
-  "bytes"
 )
 
 func writeToCache(url string, msg string) {

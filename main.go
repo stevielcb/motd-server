@@ -9,8 +9,8 @@ func main() {
   go func() {
     for {
       select {
-        case <- motdTicker.C:
-          getMotds()
+      case <-motdTicker.C:
+        getMotds()
       }
     }
   }()
@@ -19,8 +19,8 @@ func main() {
   go func() {
     for {
       select {
-        case <- cleanupTicker.C:
-          cleanupMotds()
+      case <-cleanupTicker.C:
+        cleanupMotds()
       }
     }
   }()

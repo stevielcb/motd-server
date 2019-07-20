@@ -1,17 +1,17 @@
 package main
 
 import (
+  "github.com/kelseyhightower/envconfig"
   "os"
   "strings"
-  "github.com/kelseyhightower/envconfig"
 )
 
 var (
-  cacheDir string
-  start string
-  end string
+  cacheDir     string
+  start        string
+  end          string
   giphyKeyFile string
-  c Config
+  c            Config
 )
 
 type Config struct {

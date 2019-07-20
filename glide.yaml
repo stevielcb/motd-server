@@ -1,5 +1,0 @@
-package: github.com/stevenwoah/motd-server
-import:
-- package: github.com/kelseyhightower/envconfig
-  version: ~1.4.0
-- package: github.com/nishanths/go-xkcd

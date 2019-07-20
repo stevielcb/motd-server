@@ -3,8 +3,8 @@ package main
 import (
   "fmt"
   "io/ioutil"
-  "sort"
   "os"
+  "sort"
 )
 
 func getMotds() {

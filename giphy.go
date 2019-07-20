@@ -1,11 +1,11 @@
 package main
 
 import (
+  "encoding/json"
   "fmt"
   "io/ioutil"
   "net/http"
   "net/url"
-  "encoding/json"
 )
 
 var (
@@ -43,8 +43,16 @@ func randomGiphy(tag string, rating string) (string, error) {
   }
 
   var result map[string]interface{}
-  json.Unmarshal(body, &result)
+  err = json.Unmarshal(body, &result)
+  if err != nil {
+    return "", err
+  }
+
   data := result["data"].(map[string]interface{})
+  if len(data) < 1 {
+    return "", nil
+  }
+
   images := data["images"].(map[string]interface{})
   original := images["original"].(map[string]interface{})
 
