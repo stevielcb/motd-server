@@ -6,6 +6,7 @@ import (
   "io/ioutil"
   "net/http"
   "net/url"
+  "strconv"
 )
 
 var (
@@ -55,6 +56,23 @@ func randomGiphy(tag string, rating string) (string, error) {
 
   images := data["images"].(map[string]interface{})
   original := images["original"].(map[string]interface{})
+  downsized := images["downsized_large"].(map[string]interface{})
+
+  sizeResp, err := http.Head(original["url"].(string))
+  if err != nil {
+    return "", err
+  }
+
+  if sizeResp.StatusCode != http.StatusOK {
+    return "", err
+  }
+
+  size, _ := strconv.Atoi(sizeResp.Header.Get("Content-Length"))
+  // If the original gif is larger than 10MB,
+  // get the downsized image instead.
+  if int64(size) > 10485760 {
+    return downsized["url"].(string), nil
+  }
 
   return original["url"].(string), nil
 }
