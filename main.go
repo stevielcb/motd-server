@@ -1,29 +1,29 @@
 package main
 
 import (
-  "time"
+	"time"
 )
 
 func main() {
-  motdTicker := time.NewTicker(time.Duration(c.DownloadInterval) * time.Second)
-  go func() {
-    for {
-      select {
-      case <-motdTicker.C:
-        getMotds()
-      }
-    }
-  }()
+	motdTicker := time.NewTicker(time.Duration(c.DownloadInterval) * time.Second)
+	go func() {
+		for {
+			select {
+			case <-motdTicker.C:
+				getMotds()
+			}
+		}
+	}()
 
-  cleanupTicker := time.NewTicker(time.Duration(c.CleanupInterval) * time.Second)
-  go func() {
-    for {
-      select {
-      case <-cleanupTicker.C:
-        cleanupMotds()
-      }
-    }
-  }()
+	cleanupTicker := time.NewTicker(time.Duration(c.CleanupInterval) * time.Second)
+	go func() {
+		for {
+			select {
+			case <-cleanupTicker.C:
+				cleanupMotds()
+			}
+		}
+	}()
 
-  startServer()
+	startServer()
 }

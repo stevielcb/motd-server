@@ -1,21 +1,21 @@
 package main
 
 import (
-  "github.com/nishanths/go-xkcd"
+	"github.com/nishanths/go-xkcd"
 )
 
 var (
-  xkcdClient *xkcd.Client
+	xkcdClient *xkcd.Client
 )
 
 func init() {
-  xkcdClient = xkcd.NewClient()
+	xkcdClient = xkcd.NewClient()
 }
 
 func randomXkcd() (xkcd.Comic, error) {
-  comic, err := xkcdClient.Random()
-  if err != nil {
-    return comic, err
-  }
-  return comic, nil
+	comic, err := xkcdClient.Random()
+	if err != nil {
+		return comic, err
+	}
+	return comic, nil
 }
