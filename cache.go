@@ -23,7 +23,9 @@ func writeToCache(url string, msg string) {
 		return
 	}
 
-	cacheFile := fmt.Sprintf("%s/%d", cacheDir, time.Now().UnixNano())
+	b64url := b64.StdEncoding.EncodeToString([]byte(url))
+
+	cacheFile := fmt.Sprintf("%s/%d_%s", cacheDir, time.Now().UnixNano(), b64url)
 	f, err := os.Create(cacheFile)
 	if err != nil {
 		return
@@ -31,7 +33,7 @@ func writeToCache(url string, msg string) {
 	defer f.Close()
 
 	encoded := b64.StdEncoding.EncodeToString(buf.Bytes())
-	f.WriteString(fmt.Sprintf("1337;File=;inline=1:%s", encoded))
+	f.WriteString(fmt.Sprintf("1337;File=%s;inline=1:%s", b64url, encoded))
 	if msg != "" {
 		f.WriteString(msg + "\n")
 	}
