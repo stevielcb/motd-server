@@ -28,6 +28,7 @@ func startServer() {
 
 func handleRequest(conn net.Conn) {
 	defer conn.Close()
+
 	var files []string
 
 	err := filepath.Walk(cacheDir, func(path string, info os.FileInfo, err error) error {
@@ -52,5 +53,4 @@ func handleRequest(conn net.Conn) {
 		return
 	}
 	conn.Write(dat)
-	conn.Close()
 }
