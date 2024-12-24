@@ -1,0 +1,4 @@
+github.com/kelseyhightower/envconfig v1.4.0 h1:Im6hONhd3pLkfDFsbRgu68RDNkGF1r3dvMUtDTo2cv8=
+github.com/kelseyhightower/envconfig v1.4.0/go.mod h1:cccZRl6mQpaq41TPp5QxidR+Sa3axMbJDNb//FQX6Gg=
+github.com/nishanths/go-xkcd/v2 v2.0.1 h1:rRPqdEZ7ZdP9/ycEWBF7V2BIL4BXYCrqVNGFjqKtOBY=
+github.com/nishanths/go-xkcd/v2 v2.0.1/go.mod h1:c01h22uhXC+B+8w8Rw6OsOclmjm0t4jD1tK3dhCFTus=

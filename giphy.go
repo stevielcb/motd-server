@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 )
 
@@ -14,7 +15,7 @@ var (
 )
 
 func init() {
-	dat, err := ioutil.ReadFile(giphyKeyFile)
+	dat, err := os.ReadFile(giphyKeyFile)
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +38,7 @@ func randomGiphy(tag string, rating string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Print(err.Error())
 		return "", err

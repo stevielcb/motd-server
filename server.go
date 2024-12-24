@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 func startServer() {
@@ -46,9 +44,8 @@ func handleRequest(conn net.Conn) {
 		return
 	}
 
-	rand.Seed(time.Now().UnixNano())
 	randFile := files[rand.Intn(len(files))]
-	dat, err := ioutil.ReadFile(randFile)
+	dat, err := os.ReadFile(randFile)
 	if err != nil {
 		return
 	}

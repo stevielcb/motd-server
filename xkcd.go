@@ -1,7 +1,10 @@
 package main
 
 import (
-	"github.com/nishanths/go-xkcd"
+	"context"
+	"math/rand"
+
+	"github.com/nishanths/go-xkcd/v2"
 )
 
 var (
@@ -13,7 +16,12 @@ func init() {
 }
 
 func randomXkcd() (xkcd.Comic, error) {
-	comic, err := xkcdClient.Random()
+	latest, err := xkcdClient.Latest(context.Background())
+	if err != nil {
+		return xkcd.Comic{}, err
+	}
+	number := rand.Intn(latest.Number-1) + 1
+	comic, err := xkcdClient.Get(context.Background(), number)
 	if err != nil {
 		return comic, err
 	}

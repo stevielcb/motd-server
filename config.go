@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/kelseyhightower/envconfig"
 	"os"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 var (
