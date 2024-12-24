@@ -14,6 +14,8 @@ func startServer() {
 		os.Exit(1)
 	}
 
+	fmt.Println("Server started")
+
 	defer l.Close()
 	for {
 		conn, err := l.Accept()
@@ -36,17 +38,21 @@ func handleRequest(conn net.Conn) {
 		files = append(files, path)
 		return nil
 	})
+
 	if err != nil {
+		fmt.Println("Error when walking cache dir path")
 		return
 	}
 
 	if len(files) == 0 {
+		fmt.Println("No cached files found")
 		return
 	}
 
 	randFile := files[rand.Intn(len(files))]
 	dat, err := os.ReadFile(randFile)
 	if err != nil {
+		fmt.Println("Error when reading cached file from disk")
 		return
 	}
 	conn.Write(dat)

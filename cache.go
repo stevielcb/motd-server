@@ -11,6 +11,7 @@ import (
 )
 
 func writeToCache(url string, msg string) {
+	fmt.Printf("Caching url, %s, with message, %s\n", url, msg)
 	resp, err := http.Get(url)
 	if err != nil {
 		return
@@ -33,7 +34,7 @@ func writeToCache(url string, msg string) {
 	defer f.Close()
 
 	encoded := b64.StdEncoding.EncodeToString(buf.Bytes())
-	f.WriteString(fmt.Sprintf("1337;File=%s;inline=1:%s", b64url, encoded))
+	f.WriteString(fmt.Sprintf("1337;File=inline=1;size=%d;name=%s:%s", buf.Len(), b64url, encoded))
 	if msg != "" {
 		f.WriteString(msg + "\n")
 	}
