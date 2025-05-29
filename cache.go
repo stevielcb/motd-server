@@ -1,3 +1,9 @@
+// cache.go
+//
+// This file provides functionality for caching downloaded MOTD content.
+// It downloads a file from a given URL, encodes it, and writes it to the cache directory
+// in a structured format for later retrieval by the server.
+
 package main
 
 import (
@@ -10,6 +16,14 @@ import (
 	"time"
 )
 
+// writeToCache downloads content from the specified URL and saves it into the local cache directory.
+//
+// The downloaded content is base64-encoded and written alongside optional metadata (msg).
+// Files are named using a timestamp and a base64-encoded version of the URL.
+//
+// Arguments:
+// - url: the URL to download content from.
+// - msg: an optional message string appended after the encoded content.
 func writeToCache(url string, msg string) {
 	fmt.Printf("Caching url, %s, with message, %s\n", url, msg)
 	resp, err := http.Get(url)

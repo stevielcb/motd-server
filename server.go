@@ -1,3 +1,22 @@
+// motd-server
+//
+// A lightweight TCP server that serves a random file from a specified cache directory
+// upon connection. Intended for use in scenarios where a "message of the day" (MOTD)
+// or similar rotating message needs to be served.
+//
+// How it works:
+// - Listens on the address and port specified in the configuration (c.ListenHost and c.ListenPort).
+// - On each incoming connection, randomly selects a file from the cache directory.
+// - Sends the contents of the selected file to the client and then closes the connection.
+//
+// Main Functions:
+// - startServer(): Initializes the TCP listener and accepts incoming connections.
+// - handleRequest(conn net.Conn): Handles an individual client connection, selecting and sending a file.
+//
+// Configuration assumptions:
+// - `cacheDir`: Path to the directory containing cached message files.
+// - `c`: Global configuration object containing `ListenHost` and `ListenPort`.
+
 package main
 
 import (

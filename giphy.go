@@ -1,3 +1,7 @@
+// giphy.go
+//
+// This file handles fetching random Giphy images to be used as MOTDs (messages of the day).
+// It interacts with the Giphy API to fetch either an original or a downsized image based on size limits.
 package main
 
 import (
@@ -14,6 +18,8 @@ var (
 	apiKey string
 )
 
+// init reads the Giphy API key from the file specified by giphyKeyFile
+// and initializes the global apiKey variable.
 func init() {
 	dat, err := os.ReadFile(giphyKeyFile)
 	if err != nil {
@@ -23,6 +29,11 @@ func init() {
 	apiKey = string(dat)
 }
 
+// randomGiphy fetches a random Giphy URL matching the given tag and rating.
+//
+// It selects an image and checks the size of the "original" version.
+// If the original exceeds 10MB, it falls back to the downsized large version.
+// Returns the URL of the selected Giphy image or an error if encountered.
 func randomGiphy(tag string, rating string) (string, error) {
 	url := fmt.Sprintf(
 		"http://api.giphy.com/v1/gifs/random?api_key=%s&tag=%s&rating=%s",

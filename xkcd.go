@@ -1,3 +1,7 @@
+// xkcd.go
+//
+// This file handles fetching random XKCD comics to be used as MOTDs (messages of the day).
+// It uses the github.com/nishanths/go-xkcd/v2 client for interacting with the XKCD API.
 package main
 
 import (
@@ -11,10 +15,16 @@ var (
 	xkcdClient *xkcd.Client
 )
 
+// init initializes the global XKCD client used to fetch comics.
 func init() {
 	xkcdClient = xkcd.NewClient()
 }
 
+// randomXkcd fetches a random XKCD comic.
+//
+// It first retrieves the latest comic to determine the highest comic number,
+// then randomly selects a number within the valid range and fetches that comic.
+// Returns the comic and any error encountered.
 func randomXkcd() (xkcd.Comic, error) {
 	latest, err := xkcdClient.Latest(context.Background())
 	if err != nil {

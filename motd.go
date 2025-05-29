@@ -6,6 +6,13 @@ import (
 	"sort"
 )
 
+// getMotds fetches a new set of MOTDs from external sources (Giphy and XKCD)
+// and writes them into the local cache directory.
+//
+// For each tag defined in the configuration (c.GiphyTags), a random Giphy is selected.
+// Then, a random XKCD comic is also fetched.
+//
+// Files are saved locally for future serving to clients.
 func getMotds() {
 	for tag, rating := range c.GiphyTags {
 		g, err := randomGiphy(tag, rating)
@@ -20,6 +27,11 @@ func getMotds() {
 	}
 }
 
+// cleanupMotds ensures the cache directory does not exceed the maximum allowed
+// number of files (c.CacheMaxFiles).
+//
+// It sorts the cached files by modification time (oldest first) and deletes
+// the oldest files to maintain the configured cache size.
 func cleanupMotds() {
 	entries, err := os.ReadDir(cacheDir)
 	if err != nil {
