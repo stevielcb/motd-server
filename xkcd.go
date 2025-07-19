@@ -6,6 +6,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"math/rand"
 
 	"github.com/nishanths/go-xkcd/v2"
@@ -28,12 +30,15 @@ func init() {
 func randomXkcd() (xkcd.Comic, error) {
 	latest, err := xkcdClient.Latest(context.Background())
 	if err != nil {
-		return xkcd.Comic{}, err
+		return xkcd.Comic{}, fmt.Errorf("failed to fetch latest xkcd comic: %w", err)
 	}
+
 	number := rand.Intn(latest.Number-1) + 1
 	comic, err := xkcdClient.Get(context.Background(), number)
 	if err != nil {
-		return comic, err
+		return comic, fmt.Errorf("failed to fetch xkcd comic %d: %w", number, err)
 	}
+
+	slog.Debug("fetched xkcd comic", "number", comic.Number, "title", comic.Title)
 	return comic, nil
 }

@@ -21,6 +21,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"net"
 	"os"
@@ -28,17 +29,20 @@ import (
 )
 
 func startServer() {
-	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", c.ListenHost, c.ListenPort))
+	addr := fmt.Sprintf("%s:%d", c.ListenHost, c.ListenPort)
+	l, err := net.Listen("tcp", addr)
 	if err != nil {
+		slog.Error("failed to start server", "address", addr, "error", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Server started")
+	slog.Info("server started", "address", addr)
 
 	defer l.Close()
 	for {
 		conn, err := l.Accept()
 		if err != nil {
+			slog.Error("failed to accept connection", "error", err)
 			os.Exit(1)
 		}
 		go handleRequest(conn)
@@ -51,6 +55,9 @@ func handleRequest(conn net.Conn) {
 	var files []string
 
 	err := filepath.Walk(cacheDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("error walking path %s: %w", path, err)
+		}
 		if info.IsDir() {
 			return nil
 		}
@@ -59,20 +66,23 @@ func handleRequest(conn net.Conn) {
 	})
 
 	if err != nil {
-		fmt.Println("Error when walking cache dir path")
+		slog.Error("failed to walk cache directory", "cacheDir", cacheDir, "error", err)
 		return
 	}
 
 	if len(files) == 0 {
-		fmt.Println("No cached files found")
+		slog.Warn("no cached files found", "cacheDir", cacheDir)
 		return
 	}
 
 	randFile := files[rand.Intn(len(files))]
 	dat, err := os.ReadFile(randFile)
 	if err != nil {
-		fmt.Println("Error when reading cached file from disk")
+		slog.Error("failed to read cached file", "file", randFile, "error", err)
 		return
 	}
-	conn.Write(dat)
+
+	if _, err := conn.Write(dat); err != nil {
+		slog.Error("failed to write to connection", "error", err)
+	}
 }

@@ -11,6 +11,7 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -25,9 +26,11 @@ import (
 // - url: the URL to download content from.
 // - msg: an optional message string appended after the encoded content.
 func writeToCache(url string, msg string) {
-	fmt.Printf("Caching url, %s, with message, %s\n", url, msg)
+	slog.Info("caching content", "url", url, "message", msg)
+
 	resp, err := http.Get(url)
 	if err != nil {
+		slog.Error("failed to download content", "url", url, "error", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -35,6 +38,7 @@ func writeToCache(url string, msg string) {
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, resp.Body)
 	if err != nil {
+		slog.Error("failed to read response body", "url", url, "error", err)
 		return
 	}
 
@@ -43,14 +47,26 @@ func writeToCache(url string, msg string) {
 	cacheFile := fmt.Sprintf("%s/%d_%s", cacheDir, time.Now().UnixNano(), b64url)
 	f, err := os.Create(cacheFile)
 	if err != nil {
+		slog.Error("failed to create cache file", "file", cacheFile, "error", err)
 		return
 	}
 	defer f.Close()
 
 	encoded := b64.StdEncoding.EncodeToString(buf.Bytes())
-	f.WriteString(fmt.Sprintf("1337;File=inline=1;size=%d;name=%s:%s", buf.Len(), b64url, encoded))
+	content := fmt.Sprintf("1337;File=inline=1;size=%d;name=%s:%s", buf.Len(), b64url, encoded)
 	if msg != "" {
-		f.WriteString(msg + "\n")
+		content += msg + "\n"
 	}
-	f.Sync()
+
+	if _, err := f.WriteString(content); err != nil {
+		slog.Error("failed to write to cache file", "file", cacheFile, "error", err)
+		return
+	}
+
+	if err := f.Sync(); err != nil {
+		slog.Error("failed to sync cache file", "file", cacheFile, "error", err)
+		return
+	}
+
+	slog.Debug("successfully cached content", "file", cacheFile, "size", buf.Len())
 }
