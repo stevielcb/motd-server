@@ -2,10 +2,12 @@ package cache
 
 import (
 	"bytes"
+	"crypto/rand"
 	b64 "encoding/base64"
 	"fmt"
 	"io"
 	"log/slog"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -111,8 +113,12 @@ func (m *Manager) GetRandomFile() ([]byte, error) {
 		return nil, fmt.Errorf("no cached files found")
 	}
 
-	// Select random file
-	randFile := files[time.Now().UnixNano()%int64(len(files))]
+	// Select random file using cryptographically secure random number generation
+	randIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(files))))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate random index: %w", err)
+	}
+	randFile := files[randIndex.Int64()]
 	dat, err := os.ReadFile(randFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read cached file: %w", err)
