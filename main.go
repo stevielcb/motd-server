@@ -3,25 +3,13 @@ package main
 import (
 	"log/slog"
 	"os"
-	"time"
+	"os/signal"
+	"syscall"
+
+	"github.com/stevielcb/motd-server/app"
+	"github.com/stevielcb/motd-server/internal/config"
 )
 
-// main
-//
-// Entry point of the motd-server application.
-//
-// This function sets up two background goroutines:
-// - One that periodically downloads or refreshes the MOTDs based on c.DownloadInterval.
-// - Another that periodically cleans up old MOTD files based on c.CleanupInterval.
-//
-// After starting the background processes, it launches the TCP server by calling startServer().
-//
-// Goroutines:
-// - getMotds(): Refreshes MOTD cache.
-// - cleanupMotds(): Cleans up outdated MOTD files.
-//
-// Functions called:
-// - startServer(): Starts listening for incoming TCP connections and serving messages.
 func main() {
 	// Initialize structured logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -29,23 +17,36 @@ func main() {
 	}))
 	slog.SetDefault(logger)
 
-	slog.Info("starting motd-server")
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		logger.Error("failed to load configuration", "error", err)
+		os.Exit(1)
+	}
 
-	motdTicker := time.NewTicker(time.Duration(c.DownloadInterval) * time.Second)
+	// Create application
+	application, err := app.New(cfg, logger)
+	if err != nil {
+		logger.Error("failed to create application", "error", err)
+		os.Exit(1)
+	}
+
+	// Handle graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
 	go func() {
-		slog.Info("starting MOTD download goroutine", "interval", c.DownloadInterval)
-		for range motdTicker.C {
-			getMotds()
+		<-sigChan
+		logger.Info("received shutdown signal")
+		if err := application.Stop(); err != nil {
+			logger.Error("failed to stop application gracefully", "error", err)
 		}
+		os.Exit(0)
 	}()
 
-	cleanupTicker := time.NewTicker(time.Duration(c.CleanupInterval) * time.Second)
-	go func() {
-		slog.Info("starting cleanup goroutine", "interval", c.CleanupInterval)
-		for range cleanupTicker.C {
-			cleanupMotds()
-		}
-	}()
-
-	startServer()
+	// Start application
+	if err := application.Start(); err != nil {
+		logger.Error("failed to start application", "error", err)
+		os.Exit(1)
+	}
 }
