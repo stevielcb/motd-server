@@ -60,20 +60,20 @@ func randomGiphy(tag string, rating string) (string, error) {
 		return "", fmt.Errorf("failed to read giphy API response: %w", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return "", fmt.Errorf("failed to unmarshal giphy API response: %w", err)
 	}
 
-	data := result["data"].(map[string]interface{})
+	data := result["data"].(map[string]any)
 	if len(data) < 1 {
 		return "", fmt.Errorf("no data in giphy API response")
 	}
 
-	images := data["images"].(map[string]interface{})
-	original := images["original"].(map[string]interface{})
-	downsized := images["downsized_large"].(map[string]interface{})
+	images := data["images"].(map[string]any)
+	original := images["original"].(map[string]any)
+	downsized := images["downsized_large"].(map[string]any)
 
 	sizeResp, err := http.Head(original["url"].(string))
 	if err != nil {
