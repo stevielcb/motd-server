@@ -47,7 +47,7 @@ jobs:
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v5
       with:
-        version: v2.0.0
+        version: v1.57.2
 
     - name: Build application
       run: go build -v ./...
