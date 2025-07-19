@@ -35,7 +35,7 @@ func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Initialize cache manager
-	cacheManager, err := cache.NewManager(cfg.CacheDir, cfg.CacheMaxFiles, logger)
+	cacheManager, err := cache.NewManager(cfg.CacheDir, cfg.CacheMaxFiles, cfg.MaxFileSize, logger)
 	if err != nil {
 		cancel()
 		return nil, err

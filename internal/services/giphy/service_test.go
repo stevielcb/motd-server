@@ -39,7 +39,7 @@ func TestNewService(t *testing.T) {
 			}
 
 			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-			service, err := NewService(tt.apiKeyFile, logger)
+			service, err := NewService(tt.apiKeyFile, 10*1024*1024, logger) // 10MB default
 
 			if tt.expectErr && err == nil {
 				t.Error("expected error but got none")
@@ -67,7 +67,7 @@ func TestService_GetRandom(t *testing.T) {
 	defer os.Remove(apiKeyFile)
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	service, err := NewService(apiKeyFile, logger)
+	service, err := NewService(apiKeyFile, 10*1024*1024, logger) // 10MB default
 	if err != nil {
 		t.Fatalf("failed to create service: %v", err)
 	}
@@ -125,7 +125,7 @@ func TestService_GetRandom_InvalidAPIKey(t *testing.T) {
 	defer os.Remove(apiKeyFile)
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	service, err := NewService(apiKeyFile, logger)
+	service, err := NewService(apiKeyFile, 10*1024*1024, logger) // 10MB default
 	if err != nil {
 		t.Fatalf("failed to create service: %v", err)
 	}

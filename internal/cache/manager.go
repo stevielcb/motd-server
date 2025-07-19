@@ -16,8 +16,6 @@ import (
 )
 
 const (
-	// MaxFileSizeMB is the maximum file size in bytes (10MB)
-	MaxFileSizeMB = 10 * 1024 * 1024
 	// CacheFilePrefix is the prefix used for cached file content format
 	CacheFilePrefix = "1337"
 	// CacheFileFormat is the format string for cached file content
@@ -26,22 +24,24 @@ const (
 
 // Manager handles all cache-related operations
 type Manager struct {
-	cacheDir string
-	maxFiles int
-	logger   *slog.Logger
+	cacheDir    string
+	maxFiles    int
+	maxFileSize int64
+	logger      *slog.Logger
 }
 
 // NewManager creates a new cache manager
-func NewManager(cacheDir string, maxFiles int, logger *slog.Logger) (*Manager, error) {
+func NewManager(cacheDir string, maxFiles int, maxFileSize int64, logger *slog.Logger) (*Manager, error) {
 	// Ensure cache directory exists
 	if err := os.MkdirAll(cacheDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
 	return &Manager{
-		cacheDir: cacheDir,
-		maxFiles: maxFiles,
-		logger:   logger,
+		cacheDir:    cacheDir,
+		maxFiles:    maxFiles,
+		maxFileSize: maxFileSize,
+		logger:      logger,
 	}, nil
 }
 

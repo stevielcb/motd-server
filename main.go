@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -46,17 +47,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Handle graceful shutdown
+	// Handle graceful shutdown with context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		<-sigChan
 		logger.Info("received shutdown signal")
-		if err := application.Stop(); err != nil {
-			logger.Error("failed to stop application gracefully", "error", err)
-		}
-		os.Exit(0)
+		cancel() // Signal main function to exit gracefully
 	}()
 
 	// Start application
@@ -64,4 +65,16 @@ func main() {
 		logger.Error("failed to start application", "error", err)
 		os.Exit(1)
 	}
+
+	// Wait for shutdown signal
+	<-ctx.Done()
+	logger.Info("shutting down application")
+
+	// Stop application gracefully
+	if err := application.Stop(); err != nil {
+		logger.Error("failed to stop application gracefully", "error", err)
+		os.Exit(1)
+	}
+
+	logger.Info("application stopped successfully")
 }

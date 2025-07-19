@@ -13,20 +13,22 @@ import (
 
 // Service handles Giphy API interactions
 type Service struct {
-	apiKey string
-	logger *slog.Logger
+	apiKey      string
+	maxFileSize int64
+	logger      *slog.Logger
 }
 
 // NewService creates a new Giphy service
-func NewService(apiKeyFile string, logger *slog.Logger) (*Service, error) {
+func NewService(apiKeyFile string, maxFileSize int64, logger *slog.Logger) (*Service, error) {
 	dat, err := os.ReadFile(apiKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read giphy API key file: %w", err)
 	}
 
 	return &Service{
-		apiKey: string(dat),
-		logger: logger,
+		apiKey:      string(dat),
+		maxFileSize: maxFileSize,
+		logger:      logger,
 	}, nil
 }
 
@@ -102,8 +104,7 @@ func (s *Service) GetRandom(tag string, rating string) (string, error) {
 		return "", fmt.Errorf("no downsized image URL in giphy API response")
 	}
 
-	const MaxFileSizeMB = 10 * 1024 * 1024
-	if int64(size) > MaxFileSizeMB {
+	if int64(size) > s.maxFileSize {
 		return downsizedURL, nil
 	}
 

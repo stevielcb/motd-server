@@ -35,7 +35,7 @@ func TestNewManager(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-			manager, err := NewManager(tt.cacheDir, tt.maxFiles, logger)
+			manager, err := NewManager(tt.cacheDir, tt.maxFiles, 10*1024*1024, logger) // 10MB default
 
 			if tt.expectErr && err == nil {
 				t.Error("expected error but got none")
@@ -53,7 +53,7 @@ func TestNewManager(t *testing.T) {
 func TestManager_WriteToCache(t *testing.T) {
 	tempDir := t.TempDir()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	manager, err := NewManager(tempDir, 50, logger)
+	manager, err := NewManager(tempDir, 50, 10*1024*1024, logger) // 10MB default
 	if err != nil {
 		t.Fatalf("failed to create manager: %v", err)
 	}
@@ -112,7 +112,7 @@ func TestManager_WriteToCache(t *testing.T) {
 func TestManager_GetRandomFile(t *testing.T) {
 	tempDir := t.TempDir()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	manager, err := NewManager(tempDir, 50, logger)
+	manager, err := NewManager(tempDir, 50, 10*1024*1024, logger) // 10MB default
 	if err != nil {
 		t.Fatalf("failed to create manager: %v", err)
 	}
@@ -179,7 +179,7 @@ func TestManager_GetRandomFile(t *testing.T) {
 func TestManager_Cleanup(t *testing.T) {
 	tempDir := t.TempDir()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	manager, err := NewManager(tempDir, 3, logger) // Set max files to 3
+	manager, err := NewManager(tempDir, 3, 10*1024*1024, logger) // Set max files to 3, 10MB default
 	if err != nil {
 		t.Fatalf("failed to create manager: %v", err)
 	}
@@ -250,7 +250,7 @@ func TestManager_Cleanup(t *testing.T) {
 func TestManager_CacheFileFormat(t *testing.T) {
 	tempDir := t.TempDir()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	manager, err := NewManager(tempDir, 50, logger)
+	manager, err := NewManager(tempDir, 50, 10*1024*1024, logger) // 10MB default
 	if err != nil {
 		t.Fatalf("failed to create manager: %v", err)
 	}

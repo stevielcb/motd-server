@@ -12,6 +12,7 @@ import (
 type Config struct {
 	CacheDir         string            `split_words:"true"`
 	CacheMaxFiles    int               `split_words:"true" default:"50"`
+	MaxFileSize      int64             `split_words:"true" default:"10485760"` // 10MB in bytes
 	GiphyApiKeyFile  string            `split_words:"true"`
 	GiphyTags        map[string]string `split_words:"true"`
 	DownloadInterval int               `split_words:"true" default:"10"`
@@ -53,6 +54,7 @@ func Load() (*Config, error) {
 		"downloadInterval", cfg.DownloadInterval,
 		"cleanupInterval", cfg.CleanupInterval,
 		"cacheMaxFiles", cfg.CacheMaxFiles,
+		"maxFileSize", cfg.MaxFileSize,
 	)
 
 	return &cfg, nil

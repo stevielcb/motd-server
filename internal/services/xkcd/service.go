@@ -2,9 +2,10 @@ package xkcd
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"log/slog"
-	"math/rand"
+	"math/big"
 
 	"github.com/nishanths/go-xkcd/v2"
 )
@@ -30,7 +31,12 @@ func (s *Service) GetRandom() (xkcd.Comic, error) {
 		return xkcd.Comic{}, fmt.Errorf("failed to fetch latest xkcd comic: %w", err)
 	}
 
-	number := rand.Intn(latest.Number-1) + 1
+	// Generate a cryptographically secure random number between 1 and latest.Number-1
+	randNum, err := rand.Int(rand.Reader, big.NewInt(int64(latest.Number-1)))
+	if err != nil {
+		return xkcd.Comic{}, fmt.Errorf("failed to generate random number: %w", err)
+	}
+	number := int(randNum.Int64()) + 1
 	comic, err := s.client.Get(context.Background(), number)
 	if err != nil {
 		return comic, fmt.Errorf("failed to fetch xkcd comic %d: %w", number, err)

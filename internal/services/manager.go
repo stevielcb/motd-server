@@ -18,7 +18,7 @@ type Manager struct {
 
 // NewManager creates a new services manager
 func NewManager(cfg *config.Config, logger *slog.Logger) (*Manager, error) {
-	giphyService, err := giphy.NewService(cfg.GiphyApiKeyFile, logger)
+	giphyService, err := giphy.NewService(cfg.GiphyApiKeyFile, cfg.MaxFileSize, logger)
 	if err != nil {
 		return nil, err
 	}
