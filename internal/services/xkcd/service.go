@@ -32,11 +32,12 @@ func (s *Service) GetRandom() (xkcd.Comic, error) {
 	}
 
 	// Generate a cryptographically secure random number from 1 to latest.Number (inclusive)
+	// rand.Int generates [0, latest.Number), so we add 1 to get [1, latest.Number]
 	randNum, err := rand.Int(rand.Reader, big.NewInt(int64(latest.Number)))
 	if err != nil {
 		return xkcd.Comic{}, fmt.Errorf("failed to generate random number: %w", err)
 	}
-	number := int(randNum.Int64()) + 1
+	number := int(randNum.Int64()) + 1 // Convert from 0-based to 1-based comic numbering
 	comic, err := s.client.Get(context.Background(), number)
 	if err != nil {
 		return comic, fmt.Errorf("failed to fetch xkcd comic %d: %w", number, err)
