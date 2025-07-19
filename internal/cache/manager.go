@@ -20,6 +20,8 @@ const (
 	CacheFilePrefix = "1337"
 	// CacheFileFormat is the format string for cached file content
 	CacheFileFormat = "%s;File=inline=1;size=%d;name=%s:%s"
+	// CacheFileFormatWithMessage is the format string for cached file content with message
+	CacheFileFormatWithMessage = "%s;File=inline=1;size=%d;name=%s:%s%s\n"
 )
 
 // Manager handles all cache-related operations
@@ -73,7 +75,7 @@ func (m *Manager) WriteToCache(url string, msg string) error {
 	encoded := b64.StdEncoding.EncodeToString(buf.Bytes())
 	var content string
 	if msg != "" {
-		content = fmt.Sprintf(CacheFileFormat+"%s\n", CacheFilePrefix, buf.Len(), b64url, encoded, msg)
+		content = fmt.Sprintf(CacheFileFormatWithMessage, CacheFilePrefix, buf.Len(), b64url, encoded, msg)
 	} else {
 		content = fmt.Sprintf(CacheFileFormat, CacheFilePrefix, buf.Len(), b64url, encoded)
 	}

@@ -57,7 +57,6 @@ func (m *Manager) DownloadMOTDs(cache CacheManager) error {
 
 	if err := cache.WriteToCache(comic.ImageURL, comic.Alt); err != nil {
 		m.logger.Error("failed to cache xkcd", "url", comic.ImageURL, "error", err)
-		return err
 	}
 
 	return nil
