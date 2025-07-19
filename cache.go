@@ -60,9 +60,11 @@ func writeToCache(url string, msg string) {
 	defer f.Close()
 
 	encoded := b64.StdEncoding.EncodeToString(buf.Bytes())
-	content := fmt.Sprintf(CacheFileFormat, CacheFilePrefix, buf.Len(), b64url, encoded)
+	var content string
 	if msg != "" {
-		content += msg + "\n"
+		content = fmt.Sprintf(CacheFileFormat+"%s\n", CacheFilePrefix, buf.Len(), b64url, encoded, msg)
+	} else {
+		content = fmt.Sprintf(CacheFileFormat, CacheFilePrefix, buf.Len(), b64url, encoded)
 	}
 
 	if _, err := f.WriteString(content); err != nil {
