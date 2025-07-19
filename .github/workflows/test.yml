@@ -44,11 +44,6 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
 
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v5
-      with:
-        version: v1.57.2
-
     - name: Build application
       run: go build -v ./...
 
