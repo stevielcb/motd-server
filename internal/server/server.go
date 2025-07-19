@@ -5,20 +5,20 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/stevielcb/motd-server/internal/cache"
+	"github.com/stevielcb/motd-server/internal/services"
 )
 
 // TCPServer represents a TCP server that serves cached content
 type TCPServer struct {
 	host     string
 	port     int
-	cache    *cache.Manager
+	cache    services.CacheManager
 	logger   *slog.Logger
 	listener net.Listener
 }
 
 // NewTCPServer creates a new TCP server instance
-func NewTCPServer(host string, port int, cache *cache.Manager, logger *slog.Logger) *TCPServer {
+func NewTCPServer(host string, port int, cache services.CacheManager, logger *slog.Logger) *TCPServer {
 	return &TCPServer{
 		host:   host,
 		port:   port,
