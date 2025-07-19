@@ -17,6 +17,13 @@ import (
 	"time"
 )
 
+const (
+	// CacheFilePrefix is the prefix used for cached file content format
+	CacheFilePrefix = "1337"
+	// CacheFileFormat is the format string for cached file content
+	CacheFileFormat = "%s;File=inline=1;size=%d;name=%s:%s"
+)
+
 // writeToCache downloads content from the specified URL and saves it into the local cache directory.
 //
 // The downloaded content is base64-encoded and written alongside optional metadata (msg).
@@ -53,7 +60,7 @@ func writeToCache(url string, msg string) {
 	defer f.Close()
 
 	encoded := b64.StdEncoding.EncodeToString(buf.Bytes())
-	content := fmt.Sprintf("1337;File=inline=1;size=%d;name=%s:%s", buf.Len(), b64url, encoded)
+	content := fmt.Sprintf(CacheFileFormat, CacheFilePrefix, buf.Len(), b64url, encoded)
 	if msg != "" {
 		content += msg + "\n"
 	}
