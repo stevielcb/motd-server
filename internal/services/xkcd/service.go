@@ -31,7 +31,7 @@ func (s *Service) GetRandom() (xkcd.Comic, error) {
 		return xkcd.Comic{}, fmt.Errorf("failed to fetch latest xkcd comic: %w", err)
 	}
 
-	// Generate a cryptographically secure random number between 1 and latest.Number
+	// Generate a cryptographically secure random number from 1 to latest.Number (inclusive)
 	randNum, err := rand.Int(rand.Reader, big.NewInt(int64(latest.Number)))
 	if err != nil {
 		return xkcd.Comic{}, fmt.Errorf("failed to generate random number: %w", err)

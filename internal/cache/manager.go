@@ -64,7 +64,7 @@ func (m *Manager) WriteToCache(url string, msg string) error {
 	}
 
 	b64url := b64.StdEncoding.EncodeToString([]byte(url))
-	cacheFile := fmt.Sprintf("%s/%d_%s", m.cacheDir, time.Now().UnixNano(), b64url)
+	cacheFile := filepath.Join(m.cacheDir, fmt.Sprintf("%d_%s", time.Now().UnixNano(), b64url))
 
 	f, err := os.Create(cacheFile)
 	if err != nil {
