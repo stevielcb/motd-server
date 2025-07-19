@@ -66,8 +66,8 @@ func randomGiphy(tag string, rating string) (string, error) {
 		return "", fmt.Errorf("failed to unmarshal giphy API response: %w", err)
 	}
 
-	data := result["data"].(map[string]any)
-	if len(data) < 1 {
+	data, ok := result["data"].(map[string]any)
+	if !ok || data == nil {
 		return "", fmt.Errorf("no data in giphy API response")
 	}
 
