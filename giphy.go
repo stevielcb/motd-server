@@ -100,7 +100,12 @@ func randomGiphy(tag string, rating string) (string, error) {
 		return "", fmt.Errorf("failed to check image size, status: %d", sizeResp.StatusCode)
 	}
 
-	size, _ := strconv.Atoi(sizeResp.Header.Get("Content-Length"))
+	sizeStr := sizeResp.Header.Get("Content-Length")
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse content length: %w", err)
+	}
+
 	// If the original gif is larger than MaxFileSizeMB,
 	// get the downsized image instead.
 	downsizedURL, ok := downsized["url"].(string)
