@@ -73,12 +73,7 @@ func (m *Manager) WriteToCache(url string, msg string) error {
 	defer f.Close()
 
 	encoded := b64.StdEncoding.EncodeToString(buf.Bytes())
-	var content string
-	if msg != "" {
-		content = fmt.Sprintf(CacheFileFormatWithMessage, CacheFilePrefix, buf.Len(), b64url, encoded, msg)
-	} else {
-		content = fmt.Sprintf(CacheFileFormat, CacheFilePrefix, buf.Len(), b64url, encoded)
-	}
+	content := m.formatCacheContent(buf.Len(), b64url, encoded, msg)
 
 	if _, err := f.WriteString(content); err != nil {
 		return fmt.Errorf("failed to write to cache file: %w", err)
@@ -90,6 +85,14 @@ func (m *Manager) WriteToCache(url string, msg string) error {
 
 	m.logger.Debug("successfully cached content", "file", cacheFile, "size", buf.Len())
 	return nil
+}
+
+// formatCacheContent formats the cache content with optional message
+func (m *Manager) formatCacheContent(size int, b64url, encoded, msg string) string {
+	if msg != "" {
+		return fmt.Sprintf(CacheFileFormatWithMessage, CacheFilePrefix, size, b64url, encoded, msg)
+	}
+	return fmt.Sprintf(CacheFileFormat, CacheFilePrefix, size, b64url, encoded)
 }
 
 // GetRandomFile returns a random file from the cache directory
