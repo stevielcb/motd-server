@@ -115,6 +115,41 @@ go test ./...
 go test ./internal/services/...
 ```
 
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+### Pull Request Testing
+
+When a pull request is submitted, the following checks are automatically run:
+
+- **Go Tests**: Runs all unit tests with race detection and coverage reporting
+- **Code Quality**: Runs golangci-lint for code quality checks
+- **Build Verification**: Ensures the application builds successfully
+- **Multi-platform Build**: Tests building for Linux, macOS, and Windows
+
+### Automated Releases
+
+When code is merged to the `main` branch:
+
+1. **Auto-tagging**: Automatically creates a new patch version tag (e.g., v1.0.1)
+2. **Release Creation**: Creates a GitHub release with the new tag
+3. **Binary Distribution**: Builds and uploads binaries for multiple platforms:
+   - Linux (amd64, arm64)
+   - macOS (amd64, arm64)
+   - Windows (amd64)
+4. **Checksums**: Provides SHA256 checksums for all binaries
+
+### Version Information
+
+The application includes version information that can be displayed with:
+
+```bash
+./motd-server -version
+```
+
+Version is automatically set during the build process from Git tags.
+
 ### Adding New Services
 
 To add a new MOTD provider:

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -10,7 +12,20 @@ import (
 	"github.com/stevielcb/motd-server/internal/config"
 )
 
+// version will be set during build time via ldflags
+var version = "dev"
+
 func main() {
+	// Parse command line flags
+	var showVersion bool
+	flag.BoolVar(&showVersion, "version", false, "Show version information")
+	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("motd-server version %s\n", version)
+		os.Exit(0)
+	}
+
 	// Initialize structured logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,

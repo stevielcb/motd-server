@@ -1,0 +1,113 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23.4'
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Build binaries
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/}
+        echo "Building version: $VERSION"
+        
+        # Build for multiple platforms
+        GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=$VERSION" -o motd-server-linux-amd64 .
+        GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X main.version=$VERSION" -o motd-server-linux-arm64 .
+        GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X main.version=$VERSION" -o motd-server-darwin-amd64 .
+        GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X main.version=$VERSION" -o motd-server-darwin-arm64 .
+        GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X main.version=$VERSION" -o motd-server-windows-amd64.exe .
+        
+        # Create checksums
+        sha256sum motd-server-linux-amd64 > motd-server-linux-amd64.sha256
+        sha256sum motd-server-linux-arm64 > motd-server-linux-arm64.sha256
+        sha256sum motd-server-darwin-amd64 > motd-server-darwin-amd64.sha256
+        sha256sum motd-server-darwin-arm64 > motd-server-darwin-arm64.sha256
+        sha256sum motd-server-windows-amd64.exe > motd-server-windows-amd64.exe.sha256
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          motd-server-linux-amd64
+          motd-server-linux-amd64.sha256
+          motd-server-linux-arm64
+          motd-server-linux-arm64.sha256
+          motd-server-darwin-amd64
+          motd-server-darwin-amd64.sha256
+          motd-server-darwin-arm64
+          motd-server-darwin-arm64.sha256
+          motd-server-windows-amd64.exe
+          motd-server-windows-amd64.exe.sha256
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  auto-tag:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get latest tag
+      id: get_latest_tag
+      run: |
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+    - name: Generate new version
+      id: generate_version
+      run: |
+        LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
+        # Extract version numbers using sed
+        VERSION_NUM=${LATEST_TAG#v}
+        MAJOR=$(echo $VERSION_NUM | cut -d. -f1)
+        MINOR=$(echo $VERSION_NUM | cut -d. -f2)
+        PATCH=$(echo $VERSION_NUM | cut -d. -f3)
+        
+        # Increment patch version
+        NEW_PATCH=$((PATCH + 1))
+        NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+        
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "Generated new version: $NEW_VERSION"
+
+    - name: Create and push tag
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag ${{ steps.generate_version.outputs.new_version }}
+        git push origin ${{ steps.generate_version.outputs.new_version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
