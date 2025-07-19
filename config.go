@@ -5,6 +5,7 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
@@ -35,6 +36,7 @@ type Config struct {
 func init() {
 	err := envconfig.Process("motd", &c)
 	if err != nil {
+		slog.Error("failed to process environment configuration", "error", err)
 		panic(err)
 	}
 
@@ -52,5 +54,18 @@ func init() {
 		cacheDir = c.CacheDir
 	}
 
-	os.Mkdir(cacheDir, 0700)
+	if err := os.Mkdir(cacheDir, 0700); err != nil && !os.IsExist(err) {
+		slog.Error("failed to create cache directory", "dir", cacheDir, "error", err)
+		panic(err)
+	}
+
+	slog.Info("configuration loaded",
+		"cacheDir", cacheDir,
+		"giphyKeyFile", giphyKeyFile,
+		"listenHost", c.ListenHost,
+		"listenPort", c.ListenPort,
+		"downloadInterval", c.DownloadInterval,
+		"cleanupInterval", c.CleanupInterval,
+		"cacheMaxFiles", c.CacheMaxFiles,
+	)
 }

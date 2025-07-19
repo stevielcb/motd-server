@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log/slog"
+	"os"
 	"time"
 )
 
@@ -21,8 +23,17 @@ import (
 // Functions called:
 // - startServer(): Starts listening for incoming TCP connections and serving messages.
 func main() {
+	// Initialize structured logger
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+	slog.SetDefault(logger)
+
+	slog.Info("starting motd-server")
+
 	motdTicker := time.NewTicker(time.Duration(c.DownloadInterval) * time.Second)
 	go func() {
+		slog.Info("starting MOTD download goroutine", "interval", c.DownloadInterval)
 		for range motdTicker.C {
 			getMotds()
 		}
@@ -30,6 +41,7 @@ func main() {
 
 	cleanupTicker := time.NewTicker(time.Duration(c.CleanupInterval) * time.Second)
 	go func() {
+		slog.Info("starting cleanup goroutine", "interval", c.CleanupInterval)
 		for range cleanupTicker.C {
 			cleanupMotds()
 		}

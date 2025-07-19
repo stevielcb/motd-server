@@ -8,10 +8,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+)
+
+const (
+	// MaxFileSizeMB is the maximum file size in bytes (10MB)
+	MaxFileSizeMB = 10 * 1024 * 1024
 )
 
 var (
@@ -23,6 +29,7 @@ var (
 func init() {
 	dat, err := os.ReadFile(giphyKeyFile)
 	if err != nil {
+		slog.Error("failed to read giphy API key file", "file", giphyKeyFile, "error", err)
 		panic(err)
 	}
 
@@ -32,7 +39,7 @@ func init() {
 // randomGiphy fetches a random Giphy URL matching the given tag and rating.
 //
 // It selects an image and checks the size of the "original" version.
-// If the original exceeds 10MB, it falls back to the downsized large version.
+// If the original exceeds MaxFileSizeMB, it falls back to the downsized large version.
 // Returns the URL of the selected Giphy image or an error if encountered.
 func randomGiphy(tag string, rating string) (string, error) {
 	url := fmt.Sprintf(
@@ -44,47 +51,71 @@ func randomGiphy(tag string, rating string) (string, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Print(err.Error())
-		return "", err
+		return "", fmt.Errorf("failed to fetch giphy API: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Print(err.Error())
-		return "", err
+		return "", fmt.Errorf("failed to read giphy API response: %w", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to unmarshal giphy API response: %w", err)
 	}
 
-	data := result["data"].(map[string]interface{})
-	if len(data) < 1 {
-		return "", nil
+	data, ok := result["data"].(map[string]any)
+	if !ok || data == nil {
+		return "", fmt.Errorf("no data in giphy API response")
 	}
 
-	images := data["images"].(map[string]interface{})
-	original := images["original"].(map[string]interface{})
-	downsized := images["downsized_large"].(map[string]interface{})
+	images, ok := data["images"].(map[string]any)
+	if !ok || images == nil {
+		return "", fmt.Errorf("no images data in giphy API response")
+	}
 
-	sizeResp, err := http.Head(original["url"].(string))
+	original, ok := images["original"].(map[string]any)
+	if !ok || original == nil {
+		return "", fmt.Errorf("no original image data in giphy API response")
+	}
+
+	downsized, ok := images["downsized_large"].(map[string]any)
+	if !ok || downsized == nil {
+		return "", fmt.Errorf("no downsized image data in giphy API response")
+	}
+
+	originalURL, ok := original["url"].(string)
+	if !ok || originalURL == "" {
+		return "", fmt.Errorf("no original image URL in giphy API response")
+	}
+
+	sizeResp, err := http.Head(originalURL)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to check original image size: %w", err)
 	}
 
 	if sizeResp.StatusCode != http.StatusOK {
-		return "", err
+		return "", fmt.Errorf("failed to check image size, status: %d", sizeResp.StatusCode)
 	}
 
-	size, _ := strconv.Atoi(sizeResp.Header.Get("Content-Length"))
-	// If the original gif is larger than 10MB,
+	sizeStr := sizeResp.Header.Get("Content-Length")
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse content length: %w", err)
+	}
+
+	// If the original gif is larger than MaxFileSizeMB,
 	// get the downsized image instead.
-	if int64(size) > 10485760 {
-		return downsized["url"].(string), nil
+	downsizedURL, ok := downsized["url"].(string)
+	if !ok || downsizedURL == "" {
+		return "", fmt.Errorf("no downsized image URL in giphy API response")
 	}
 
-	return original["url"].(string), nil
+	if int64(size) > MaxFileSizeMB {
+		return downsizedURL, nil
+	}
+
+	return originalURL, nil
 }
