@@ -1,51 +1,80 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"fmt"
 	"log/slog"
 	"os"
-	"time"
+	"os/signal"
+	"syscall"
+
+	"github.com/stevielcb/motd-server/app"
+	"github.com/stevielcb/motd-server/internal/config"
 )
 
-// main
-//
-// Entry point of the motd-server application.
-//
-// This function sets up two background goroutines:
-// - One that periodically downloads or refreshes the MOTDs based on c.DownloadInterval.
-// - Another that periodically cleans up old MOTD files based on c.CleanupInterval.
-//
-// After starting the background processes, it launches the TCP server by calling startServer().
-//
-// Goroutines:
-// - getMotds(): Refreshes MOTD cache.
-// - cleanupMotds(): Cleans up outdated MOTD files.
-//
-// Functions called:
-// - startServer(): Starts listening for incoming TCP connections and serving messages.
+// version will be set during build time via ldflags
+var version = "dev"
+
 func main() {
+	// Parse command line flags
+	var showVersion bool
+	flag.BoolVar(&showVersion, "version", false, "Show version information")
+	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("motd-server version %s\n", version)
+		os.Exit(0)
+	}
+
 	// Initialize structured logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
 	slog.SetDefault(logger)
 
-	slog.Info("starting motd-server")
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		logger.Error("failed to load configuration", "error", err)
+		os.Exit(1)
+	}
 
-	motdTicker := time.NewTicker(time.Duration(c.DownloadInterval) * time.Second)
+	// Create application
+	application, err := app.New(cfg, logger)
+	if err != nil {
+		logger.Error("failed to create application", "error", err)
+		os.Exit(1)
+	}
+
+	// Handle graceful shutdown with context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
 	go func() {
-		slog.Info("starting MOTD download goroutine", "interval", c.DownloadInterval)
-		for range motdTicker.C {
-			getMotds()
-		}
+		<-sigChan
+		logger.Info("received shutdown signal")
+		cancel() // Signal main function to exit gracefully
 	}()
 
-	cleanupTicker := time.NewTicker(time.Duration(c.CleanupInterval) * time.Second)
-	go func() {
-		slog.Info("starting cleanup goroutine", "interval", c.CleanupInterval)
-		for range cleanupTicker.C {
-			cleanupMotds()
-		}
-	}()
+	// Start application
+	if err := application.Start(); err != nil {
+		logger.Error("failed to start application", "error", err)
+		os.Exit(1)
+	}
 
-	startServer()
+	// Wait for shutdown signal
+	<-ctx.Done()
+	logger.Info("shutting down application")
+
+	// Stop application gracefully
+	if err := application.Stop(); err != nil {
+		logger.Error("failed to stop application gracefully", "error", err)
+		os.Exit(1)
+	}
+
+	logger.Info("application stopped successfully")
 }

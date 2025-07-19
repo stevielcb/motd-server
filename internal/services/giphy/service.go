@@ -1,8 +1,4 @@
-// giphy.go
-//
-// This file handles fetching random Giphy images to be used as MOTDs (messages of the day).
-// It interacts with the Giphy API to fetch either an original or a downsized image based on size limits.
-package main
+package giphy
 
 import (
 	"encoding/json"
@@ -15,36 +11,32 @@ import (
 	"strconv"
 )
 
-const (
-	// MaxFileSizeMB is the maximum file size in bytes (10MB)
-	MaxFileSizeMB = 10 * 1024 * 1024
-)
-
-var (
-	apiKey string
-)
-
-// init reads the Giphy API key from the file specified by giphyKeyFile
-// and initializes the global apiKey variable.
-func init() {
-	dat, err := os.ReadFile(giphyKeyFile)
-	if err != nil {
-		slog.Error("failed to read giphy API key file", "file", giphyKeyFile, "error", err)
-		panic(err)
-	}
-
-	apiKey = string(dat)
+// Service handles Giphy API interactions
+type Service struct {
+	apiKey      string
+	maxFileSize int64
+	logger      *slog.Logger
 }
 
-// randomGiphy fetches a random Giphy URL matching the given tag and rating.
-//
-// It selects an image and checks the size of the "original" version.
-// If the original exceeds MaxFileSizeMB, it falls back to the downsized large version.
-// Returns the URL of the selected Giphy image or an error if encountered.
-func randomGiphy(tag string, rating string) (string, error) {
+// NewService creates a new Giphy service
+func NewService(apiKeyFile string, maxFileSize int64, logger *slog.Logger) (*Service, error) {
+	dat, err := os.ReadFile(apiKeyFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read giphy API key file: %w", err)
+	}
+
+	return &Service{
+		apiKey:      string(dat),
+		maxFileSize: maxFileSize,
+		logger:      logger,
+	}, nil
+}
+
+// GetRandom fetches a random Giphy URL matching the given tag and rating
+func (s *Service) GetRandom(tag string, rating string) (string, error) {
 	url := fmt.Sprintf(
 		"http://api.giphy.com/v1/gifs/random?api_key=%s&tag=%s&rating=%s",
-		apiKey,
+		s.apiKey,
 		url.QueryEscape(tag),
 		rating,
 	)
@@ -106,14 +98,13 @@ func randomGiphy(tag string, rating string) (string, error) {
 		return "", fmt.Errorf("failed to parse content length: %w", err)
 	}
 
-	// If the original gif is larger than MaxFileSizeMB,
-	// get the downsized image instead.
+	// If the original gif is larger than MaxFileSizeMB, get the downsized image instead
 	downsizedURL, ok := downsized["url"].(string)
 	if !ok || downsizedURL == "" {
 		return "", fmt.Errorf("no downsized image URL in giphy API response")
 	}
 
-	if int64(size) > MaxFileSizeMB {
+	if int64(size) > s.maxFileSize {
 		return downsizedURL, nil
 	}
 
