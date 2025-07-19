@@ -71,11 +71,27 @@ func randomGiphy(tag string, rating string) (string, error) {
 		return "", fmt.Errorf("no data in giphy API response")
 	}
 
-	images := data["images"].(map[string]any)
-	original := images["original"].(map[string]any)
-	downsized := images["downsized_large"].(map[string]any)
+	images, ok := data["images"].(map[string]any)
+	if !ok || images == nil {
+		return "", fmt.Errorf("no images data in giphy API response")
+	}
 
-	sizeResp, err := http.Head(original["url"].(string))
+	original, ok := images["original"].(map[string]any)
+	if !ok || original == nil {
+		return "", fmt.Errorf("no original image data in giphy API response")
+	}
+
+	downsized, ok := images["downsized_large"].(map[string]any)
+	if !ok || downsized == nil {
+		return "", fmt.Errorf("no downsized image data in giphy API response")
+	}
+
+	originalURL, ok := original["url"].(string)
+	if !ok || originalURL == "" {
+		return "", fmt.Errorf("no original image URL in giphy API response")
+	}
+
+	sizeResp, err := http.Head(originalURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to check original image size: %w", err)
 	}
@@ -87,9 +103,14 @@ func randomGiphy(tag string, rating string) (string, error) {
 	size, _ := strconv.Atoi(sizeResp.Header.Get("Content-Length"))
 	// If the original gif is larger than MaxFileSizeMB,
 	// get the downsized image instead.
-	if int64(size) > MaxFileSizeMB {
-		return downsized["url"].(string), nil
+	downsizedURL, ok := downsized["url"].(string)
+	if !ok || downsizedURL == "" {
+		return "", fmt.Errorf("no downsized image URL in giphy API response")
 	}
 
-	return original["url"].(string), nil
+	if int64(size) > MaxFileSizeMB {
+		return downsizedURL, nil
+	}
+
+	return originalURL, nil
 }
